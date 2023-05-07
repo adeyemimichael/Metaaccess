@@ -12,7 +12,7 @@ pragma solidity ^0.8.0;
  //mapping variable here 
  mapping (address => uint ) public balances;
 
-
+//mint function 
  function mint(address _address, uint _value) public {
 totalSupply += _value;
 balances[_address] += _value;
