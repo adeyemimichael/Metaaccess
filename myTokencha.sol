@@ -14,28 +14,56 @@ pragma solidity ^0.8.0;
        to the amount that is supposed to be burned.
 */
 
-// public variable here 
- contract MyToken {
- string public tokenName = "MetaToken";
- string public tokenAbbrev = "MToken";
- uint public totalSupply = 0;
+pragma solidity ^0.8.0;
 
+contract MyToken {
+    string public tokenName = "MetaToken"; // name of the token
+    string public tokenAbbrev = "MToken"; // abbreviation of the token
+    uint public totalSupply = 0; // total supply of the token
+    uint public maxSupply = 1000000; // maximum supply cap of the token
+    bool public paused = false; // flag to indicate whether the contract is paused
+    address public owner; // address of the contract owner
 
- //mapping variable here 
- mapping (address => uint ) public balances;
+    mapping (address => uint) public balances; // mapping to track the balance of each address
 
-//mint function 
- function mint(address _address, uint _value) public {
-totalSupply += _value;
-balances[_address] += _value;
- }
+    constructor() {
+        owner = msg.sender; // set the owner of the contract to the address that deploys the contract
+    }
 
- //burn function here
-  function burn (address _address, uint _value) public {
-      if (balances [_address] >= _value) {
-totalSupply -= _value;
-balances[_address] -= _value;
- }
- }
- }
- 
+    function mint(address _address, uint _value) public {
+        require(!paused, "Contract is paused"); // check if the contract is not paused
+        require(totalSupply + _value <= maxSupply, "Max supply exceeded"); // check if the maximum supply cap is not exceeded
+        totalSupply += _value; // increase the total supply by the minted value
+        balances[_address] += _value; // increase the balance of the specified address by the minted value
+    }
+
+    function burn(address _address, uint _value) public {
+        require(!paused, "Contract is paused"); // check if the contract is not paused
+        if (balances[_address] >= _value) { // check if the balance of the specified address is greater than or equal to the burned value
+            totalSupply -= _value; // decrease the total supply by the burned value
+            balances[_address] -= _value; // decrease the balance of the specified address by the burned value
+        }
+    }
+
+    function transfer(address _to, uint _value) public {
+        require(!paused, "Contract is paused"); // check if the contract is not paused
+        require(balances[msg.sender] >= _value, "Insufficient balance"); // check if the balance of the sender is greater than or equal to the transfer value
+        balances[msg.sender] -= _value; // decrease the balance of the sender by the transfer value
+        balances[_to] += _value; // increase the balance of the recipient by the transfer value
+    }
+
+    function setMaxSupply(uint _maxSupply) public {
+        require(msg.sender == owner, "Caller is not the owner"); // check if the caller is the owner of the contract
+        maxSupply = _maxSupply; // set the maximum supply cap to the specified value
+    }
+
+    function pauseContract() public {
+        require(msg.sender == owner, "Caller is not the owner"); // check if the caller is the owner of the contract
+        paused = true; // set the paused flag to true
+    }
+
+    function resumeContract() public {
+        require(msg.sender == owner, "Caller is not the owner"); // check if the caller is the owner of the contract
+        paused = false; // set the paused flag to false
+    }
+}
